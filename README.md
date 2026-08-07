@@ -1,39 +1,39 @@
 # Really Inspired
 
-Módulo para Foundry VTT que gestiona la Inspiración de D&D5e, con soporte para un pool compartido entre todo el grupo o un contador individual por personaje.
+A Foundry VTT module that manages D&D5e Inspiration, with support for a pool shared by the whole party or an individual counter per character.
 
-## Requisitos
+## Requirements
 
 - Foundry VTT v13+
-- Sistema dnd5e v3+
+- dnd5e system v3+
 
-## ¿Qué hace?
+## What it does
 
-### Modo de Inspiración: individual o compartido
+### Inspiration mode: individual or shared
 
-Desde **Configurar Ajustes**, el GM elige cómo se maneja la Inspiración en la mesa:
+From **Configure Settings**, the GM chooses how Inspiration works at the table:
 
-- **Individual**: cada personaje tiene su propio contador, como en las reglas estándar.
-- **Compartido**: hay un único "pool" de Inspiración para todo el grupo. Cualquier personaje puede usar de ese pool común, y lo que gasta uno lo gastan todos.
+- **Individual**: each character has their own counter, just like the standard rules.
+- **Shared**: there's a single Inspiration "pool" for the whole party. Any character can draw from that common pool, and what one spends, everyone spends.
 
-También se configura el **máximo de Inspiración por personaje**. En modo compartido, el máximo del pool se calcula automáticamente como ese número multiplicado por la cantidad de personajes de los jugadores.
+There's also a setting for the **maximum Inspiration per character**. In shared mode, the pool's maximum is calculated automatically as that number multiplied by the number of player characters.
 
-### Un contador visible en la hoja de personaje
+### A visible counter on the character sheet
 
-En vez del pequeño ícono de Inspiración de siempre (que solo se puede marcar o desmarcar), la hoja de personaje muestra un contador claro con el número actual y el máximo, más botones para sumar o restar. Por defecto solo el GM puede usarlos, pero hay una opción para permitir que los jugadores también ajusten su propia Inspiración.
+Instead of the small Inspiration icon (which can only be checked or unchecked), the character sheet shows a clear counter with the current amount and the maximum, plus buttons to add or remove. By default only the GM can use them, but there's an option to let players adjust their own Inspiration too.
 
-### Ceder Inspiración desde el chat
+### Granting inspiration from chat
 
-Cuando alguien hace una tirada (de habilidad, salvación o ataque), cualquier jugador puede hacer **click derecho sobre ese mensaje del chat** y elegir **"Tirar con inspiración"**. Eso gasta 1 de inspiración de quien hizo click (no de quien tiró los dados) y genera una tirada nueva para repetir esa prueba, usando siempre los modificadores del personaje que tiró originalmente. Así, un jugador puede "regalarle" una repetición a otro compañero usando su propia Inspiración.
+When someone makes a roll (a skill check, saving throw, or attack), any player can **right-click that chat message** and choose **"Roll with inspiration"**. That spends 1 inspiration from whoever clicked it (not from whoever made the roll) and creates a new roll to redo that check, always using the modifiers of the character who rolled originally. This lets a player "gift" a reroll to a teammate by spending their own Inspiration.
 
-### El GM puede otorgar Inspiración con un atajo de teclado
+### The GM can grant inspiration with a keyboard shortcut
 
-Presionando la tecla **"I"**, el GM abre un pequeño diálogo para elegir a qué personaje darle 1 de Inspiración, sin tener que ir a buscar su hoja. El grupo se entera por un mensaje en el chat.
+Pressing the **"I"** key opens a small dialog for the GM to pick which character gets 1 Inspiration, without needing to open their sheet. The party finds out via a chat message.
 
-### Compatible con la Inspiración normal del sistema
+### Compatible with the system's regular Inspiration
 
-El módulo mantiene sincronizado el indicador de Inspiración normal de dnd5e por si algún otro módulo o automatización de reglas lo usa: si el contador de un personaje tiene 1 o más, ese indicador aparece activo; si llega a 0, aparece desactivado.
+The module keeps the regular dnd5e Inspiration indicator in sync, in case another module or rules automation relies on it: if a character's counter is 1 or higher, that indicator shows as active; once it reaches 0, it shows as inactive.
 
-## Idioma
+## Language
 
-La interfaz está traducida a **español e inglés**, y se ajusta automáticamente según el idioma configurado por cada usuario en Foundry (Configuración > Idioma) — no hace falta ninguna configuración adicional por parte del GM.
+The interface is translated into **English and Spanish**, and automatically follows the language each user has configured in Foundry (Configuration > Language) — no extra setup needed from the GM.
