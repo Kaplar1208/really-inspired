@@ -1,5 +1,4 @@
 import { MODULE_ID, SETTINGS, POOL_MODES } from "./constants.mjs";
-import { isSocketlibAvailable } from "./socketlib-bridge.mjs";
 
 export function registerSettings() {
   game.settings.register(MODULE_ID, SETTINGS.POOL_MODE, {
@@ -34,16 +33,6 @@ export function registerSettings() {
     type: Boolean,
     default: false
   });
-
-  // Solo existe cuando socketlib está disponible; ver shared-pool-backend.mjs.
-  if (isSocketlibAvailable()) {
-    game.settings.register(MODULE_ID, SETTINGS.SHARED_POOL_SETTING, {
-      scope: "world",
-      config: false,
-      type: Number,
-      default: 0
-    });
-  }
 }
 
 /**

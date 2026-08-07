@@ -1,5 +1,5 @@
 import { MODULE_ID } from "./constants.mjs";
-import { getCount, getMax, canAdjust, adjustCount } from "./inspiration.mjs";
+import { getCount, getMax, canAdjust, adjustCount, spendInspiration, getIndividualCount, getMaxPerCharacter } from "./inspiration.mjs";
 
 const TEMPLATE = `modules/${MODULE_ID}/templates/inspiration-widget.hbs`;
 
@@ -42,12 +42,18 @@ async function buildWidget(actor) {
   const max = getMax(actor);
   const adjustable = canAdjust(actor);
 
+  // "+" siempre otorga a ESTE personaje: además de no pasarse del máximo
+  // mostrado (el del grupo en modo compartido), tampoco puede pasarse del
+  // tope individual de este personaje en concreto.
+  const canIncrement = adjustable && current < max && getIndividualCount(actor) < getMaxPerCharacter();
+  const canDecrement = adjustable && current > 0;
+
   const html = await foundry.applications.handlebars.renderTemplate(TEMPLATE, {
     current,
     max,
     canAdjust: adjustable,
-    canIncrement: adjustable && current < max,
-    canDecrement: adjustable && current > 0
+    canIncrement,
+    canDecrement
   });
 
   const template = document.createElement("template");
@@ -55,7 +61,7 @@ async function buildWidget(actor) {
   const widget = template.content.firstElementChild;
 
   widget.querySelector(".ri-increment")?.addEventListener("click", () => adjustCount(actor, 1));
-  widget.querySelector(".ri-decrement")?.addEventListener("click", () => adjustCount(actor, -1));
+  widget.querySelector(".ri-decrement")?.addEventListener("click", () => spendInspiration(actor, 1));
 
   return widget;
 }

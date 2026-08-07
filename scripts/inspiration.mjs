@@ -1,21 +1,18 @@
 import { MODULE_ID, SETTINGS, POOL_MODES } from "./constants.mjs";
 import { getMaxSharedPool } from "./settings.mjs";
-import { getSharedPoolValue, setSharedPoolValue, onSharedPoolChange, registerSharedPoolBackend } from "./shared-pool-backend.mjs";
 
 const FLAG_COUNT = "count";
+const SOCKET_CHANNEL = `module.${MODULE_ID}`;
 
 // Marca los updates que nosotros mismos hacemos sobre system.attributes.inspiration,
 // para que la sincronización reactiva de más abajo no reaccione a su propia escritura.
 const INTERNAL_UPDATE = { [MODULE_ID]: { internal: true } };
 
 export function registerInspirationHooks() {
-  registerSharedPoolBackend();
-  onSharedPoolChange(() => {
-    if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersToPool();
-  });
   Hooks.on("updateActor", onUpdateActor);
   Hooks.once("ready", () => {
-    if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersToPool();
+    game.socket.on(SOCKET_CHANNEL, onSpendRequest);
+    if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersVanillaFlags();
   });
 }
 
@@ -27,17 +24,24 @@ export function getMaxPerCharacter() {
   return game.settings.get(MODULE_ID, SETTINGS.MAX_PER_CHARACTER);
 }
 
-export function getSharedPool() {
-  return getSharedPoolValue();
-}
-
 export function getIndividualCount(actor) {
   return actor.getFlag(MODULE_ID, FLAG_COUNT) ?? 0;
 }
 
+/**
+ * El "pool compartido" no es un valor guardado aparte: es la suma de lo
+ * que cada personaje de jugador tiene guardado en su propio flag. Así no
+ * hay dos lugares que se puedan desincronizar entre sí al cambiar de modo.
+ */
+export function getGroupTotal() {
+  return game.actors
+    .filter(a => a.type === "character" && a.hasPlayerOwner)
+    .reduce((sum, a) => sum + getIndividualCount(a), 0);
+}
+
 /** Cuenta que corresponde mostrar para este actor, según el modo activo. */
 export function getCount(actor) {
-  return getPoolMode() === POOL_MODES.SHARED ? getSharedPool() : getIndividualCount(actor);
+  return getPoolMode() === POOL_MODES.SHARED ? getGroupTotal() : getIndividualCount(actor);
 }
 
 /** Máximo que corresponde mostrar para este actor, según el modo activo. */
@@ -48,37 +52,64 @@ export function getMax(actor) {
 export function canAdjust(actor) {
   if (game.user.isGM) return true;
   if (!game.settings.get(MODULE_ID, SETTINGS.PLAYERS_CAN_ADJUST)) return false;
-  return getPoolMode() === POOL_MODES.SHARED ? true : actor.isOwner;
+  return actor.isOwner;
 }
 
 /**
- * Punto de entrada único para los botones +/- de la hoja y para el reroll
- * de chat. Ya no hace falta relay: el pool compartido vive en un actor que
- * todos los jugadores pueden escribir, y el modo individual siempre actúa
- * sobre un actor que quien llama ya posee.
+ * Escritura directa: siempre afecta el propio número de ESTE personaje, sin
+ * importar el modo. La usan el botón "+" de la hoja y el otorgamiento
+ * manual del GM (tecla "I") — otorgar siempre es darle a alguien en
+ * concreto, nunca es ambiguo.
  */
-export async function setCount(actor, value) {
-  if (getPoolMode() === POOL_MODES.SHARED) return applySharedPool(value);
-  return applyIndividualCount(actor, value);
-}
-
 export async function adjustCount(actor, delta) {
-  return setCount(actor, getCount(actor) + delta);
+  return applyIndividualCount(actor, getIndividualCount(actor) + delta);
 }
 
-async function applySharedPool(value) {
-  const clamped = Math.clamp(value, 0, getMaxSharedPool());
-  await setSharedPoolValue(clamped);
-  // No hace falta tocar aquí los actores de los demás jugadores: cada cliente
-  // sincroniza sus propios personajes al reaccionar al cambio del valor del
-  // pool (ver onSharedPoolChange más arriba), así nadie necesita permisos
-  // que no tiene.
+/**
+ * Gasto consciente del modo. En individual, resta directo de este
+ * personaje. En compartido, resta primero de este personaje; si ya está en
+ * 0, la resta la absorbe quien tenga más inspiración en el grupo.
+ */
+export async function spendInspiration(actingActor, amount = 1) {
+  const own = getIndividualCount(actingActor);
+  if (getPoolMode() !== POOL_MODES.SHARED || own >= amount) {
+    return applyIndividualCount(actingActor, own - amount);
+  }
+  return spendFromGroup(amount);
+}
+
+async function spendFromGroup(amount) {
+  const holder = findMaxHolder();
+  if (!holder) return;
+
+  if (holder.isOwner) {
+    return applyIndividualCount(holder, getIndividualCount(holder) - amount);
+  }
+  // No somos dueños de quien tiene más: se lo pedimos a quien sí lo sea (o
+  // al GM como respaldo). Ver isResponsibleFor/onSpendRequest más abajo.
+  game.socket.emit(SOCKET_CHANNEL, { type: "spendFrom", actorId: holder.id, amount });
+}
+
+function findMaxHolder() {
+  let best = null;
+  for (const actor of game.actors.filter(a => a.type === "character" && a.hasPlayerOwner)) {
+    if (!best || getIndividualCount(actor) > getIndividualCount(best)) best = actor;
+  }
+  return best && getIndividualCount(best) > 0 ? best : null;
+}
+
+function onSpendRequest(message = {}) {
+  if (message.type !== "spendFrom") return;
+  const actor = game.actors.get(message.actorId);
+  if (!actor || !isResponsibleFor(actor)) return;
+  const current = getIndividualCount(actor);
+  if (current >= message.amount) applyIndividualCount(actor, current - message.amount);
 }
 
 async function applyIndividualCount(actor, value) {
   const clamped = Math.clamp(value, 0, getMaxPerCharacter());
   await actor.setFlag(MODULE_ID, FLAG_COUNT, clamped);
-  await syncVanillaFlag(actor, clamped > 0);
+  await syncVanillaFlag(actor, getCount(actor) > 0);
 }
 
 async function syncVanillaFlag(actor, hasInspiration) {
@@ -97,6 +128,12 @@ function onUpdateActor(actor, changes, options) {
   if (options[MODULE_ID]?.internal) return;
   if (actor.type !== "character") return;
 
+  // Cambió el número de ALGÚN personaje: en modo compartido eso mueve el
+  // total del grupo, así que cada cliente revisa si el checkbox vainilla de
+  // sus propios personajes sigue reflejando ese total.
+  const countChanged = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_COUNT}`) !== undefined;
+  if (countChanged && getPoolMode() === POOL_MODES.SHARED) syncMyCharactersVanillaFlags();
+
   // Otro módulo (automatización de reglas, macros) pudo togglear el flag
   // vainilla por su cuenta. Si es así, ajustamos nuestro contador para no
   // quedar desincronizados.
@@ -104,29 +141,33 @@ function onUpdateActor(actor, changes, options) {
   if (hasInspiration === undefined) return;
   if (!isResponsibleFor(actor)) return;
 
-  if (getPoolMode() === POOL_MODES.SHARED) {
-    // Solo se puede inferir con seguridad el caso "se gastó 1"; un external
-    // false->true no dice cuánto debería sumarse, así que ese caso se ignora.
-    if (!hasInspiration) applySharedPool(getSharedPool() - 1);
+  const current = getIndividualCount(actor);
+  if (hasInspiration) {
+    if (current === 0) applyIndividualCount(actor, 1);
     return;
   }
 
-  const current = getIndividualCount(actor);
-  if (hasInspiration && current === 0) applyIndividualCount(actor, 1);
-  else if (!hasInspiration && current > 0) applyIndividualCount(actor, current - 1);
+  if (current > 0) {
+    applyIndividualCount(actor, current - 1);
+  } else if (getPoolMode() === POOL_MODES.SHARED) {
+    // El flag de este personaje mostraba "true" solo porque el grupo tenía
+    // inspiración (su propio número está en 0); el gasto externo se
+    // absorbe de quien realmente tenga con qué pagarlo.
+    spendFromGroup(1);
+  }
 }
 
-function syncMyCharactersToPool() {
-  const hasInspiration = getSharedPool() > 0;
+function syncMyCharactersVanillaFlags() {
+  const hasInspiration = getGroupTotal() > 0;
   for (const actor of game.actors.filter(a => a.type === "character" && a.isOwner)) {
     syncVanillaFlag(actor, hasInspiration);
   }
 }
 
 /**
- * Evita que dos clientes reaccionen al mismo cambio externo a la vez (lo que
- * duplicaría el descuento). El dueño jugador conectado tiene prioridad; el
- * GM solo actúa como respaldo si nadie más está conectado para ese actor.
+ * Evita que dos clientes reaccionen al mismo cambio a la vez. El dueño
+ * jugador conectado tiene prioridad; el GM solo actúa como respaldo si
+ * nadie más está conectado para ese actor.
  */
 function isResponsibleFor(actor) {
   if (!actor.isOwner) return false;

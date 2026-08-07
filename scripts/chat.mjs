@@ -1,5 +1,5 @@
 import { MODULE_ID, POOL_MODES } from "./constants.mjs";
-import { getCount, getMax, adjustCount, getPoolMode, getSharedPool, getIndividualCount } from "./inspiration.mjs";
+import { getCount, getMax, spendInspiration, getPoolMode, getGroupTotal, getIndividualCount } from "./inspiration.mjs";
 
 export function registerChatHooks() {
   Hooks.on("getChatMessageContextOptions", addRerollOption);
@@ -36,7 +36,7 @@ async function rerollWithInspiration(li) {
   const actingActor = await chooseSpendingCharacter();
   if (!actingActor) return;
 
-  await adjustCount(actingActor, -1);
+  await spendInspiration(actingActor, 1);
   ui.notifications.info(game.i18n.format("REALLY-INSPIRED.Chat.SpentNotification", {
     actor: actingActor.name,
     remaining: getCount(actingActor),
@@ -70,7 +70,7 @@ async function rerollWithInspiration(li) {
  */
 function getSpendableCharacters() {
   const owned = game.actors.filter(a => a.type === "character" && a.isOwner);
-  if (getPoolMode() === POOL_MODES.SHARED) return getSharedPool() > 0 ? owned : [];
+  if (getPoolMode() === POOL_MODES.SHARED) return getGroupTotal() > 0 ? owned : [];
   return owned.filter(a => getIndividualCount(a) > 0);
 }
 

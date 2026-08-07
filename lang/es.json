@@ -13,10 +13,7 @@
   "REALLY-INSPIRED.Settings.PlayersCanAdjust.Hint": "Si está activo, los jugadores pueden usar los botones +/- en la hoja de personaje. Si está desactivado, solo el GM puede hacerlo.",
 
   "REALLY-INSPIRED.Warning.NoCharacter": "No tienes un personaje asignado para ceder inspiración.",
-  "REALLY-INSPIRED.Warning.NoPoolActor": "No se encontró el actor del pool compartido. Pide a un GM que entre al mundo una vez para crearlo.",
-  "REALLY-INSPIRED.Warning.PoolActorLocked": "Este actor es la reserva interna del pool compartido de Really Inspired: no se edita a mano.",
-  "REALLY-INSPIRED.Warning.PoolActorProtected": "Este actor es la reserva interna del pool compartido de Really Inspired: solo el GM puede modificarlo directamente.",
-  "REALLY-INSPIRED.Warning.SocketlibNotReady": "socketlib todavía no está listo. Espera un momento e inténtalo de nuevo.",
+  "REALLY-INSPIRED.Warning.AlreadyMax": "{actor} ya tiene el máximo de inspiración.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiración",
 
@@ -25,5 +22,12 @@
   "REALLY-INSPIRED.Chat.RerollFlavorGranted": "Repetido gracias a la inspiración cedida por {actor}.",
   "REALLY-INSPIRED.Chat.SpentNotification": "{actor} gastó 1 de inspiración ({remaining}/{max}).",
   "REALLY-INSPIRED.Chat.ChooseCharacter.Title": "¿Con qué personaje cedes inspiración?",
-  "REALLY-INSPIRED.Chat.ChooseCharacter.Hint": "Controlas más de un personaje con inspiración disponible. Elige de cuál se descuenta."
+  "REALLY-INSPIRED.Chat.ChooseCharacter.Hint": "Controlas más de un personaje con inspiración disponible. Elige de cuál se descuenta.",
+  "REALLY-INSPIRED.Chat.GrantedByGM": "El GM le dio 1 de inspiración a {actor} ({remaining}/{max}).",
+
+  "REALLY-INSPIRED.Keybind.GrantInspiration.Name": "Otorgar inspiración",
+  "REALLY-INSPIRED.Keybind.GrantInspiration.Hint": "Abre un diálogo para darle 1 de inspiración a un personaje.",
+
+  "REALLY-INSPIRED.GrantDialog.Title": "¿A quién le das inspiración?",
+  "REALLY-INSPIRED.GrantDialog.Hint": "Elige el personaje que recibe 1 de inspiración."
 }
