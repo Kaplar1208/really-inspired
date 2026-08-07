@@ -1,0 +1,11 @@
+{
+  "REALLY-INSPIRED.ModuleName": "Really Inspired",
+
+  "REALLY-INSPIRED.Settings.PoolMode.Name": "Modo de Inspiración",
+  "REALLY-INSPIRED.Settings.PoolMode.Hint": "Compartido: un único pool de inspiración para todo el grupo. Individual: cada personaje tiene su propio contador.",
+  "REALLY-INSPIRED.Settings.PoolMode.Shared": "Pool compartido",
+  "REALLY-INSPIRED.Settings.PoolMode.Individual": "Individual por personaje",
+
+  "REALLY-INSPIRED.Settings.MaxPerCharacter.Name": "Máximo por personaje",
+  "REALLY-INSPIRED.Settings.MaxPerCharacter.Hint": "Tope de inspiración por personaje. En modo compartido, el máximo del pool es este valor multiplicado por el número de personajes de jugador."
+}
