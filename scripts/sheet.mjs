@@ -12,14 +12,19 @@ async function onRenderActorSheet(app, html) {
   if (actor?.type !== "character") return;
 
   const root = html instanceof HTMLElement ? html : html[0];
-  const header = root.querySelector("header.sheet-header .right");
+  const header = root.querySelector("header.sheet-header");
   if (!header) return;
 
   root.querySelector("button.inspiration, .inspiration.unbutton")?.remove();
   root.querySelector(".really-inspired-widget")?.remove();
 
+  // Insertado como overlay del header (no dentro de .right): esa columna usa
+  // flex-direction:column con hijos posicionados por variables CSS muy
+  // específicas (nivel, insignia de gestas, botones de descanso). Meter un
+  // bloque normal ahí empuja todo lo demás. El propio header ya es
+  // position:relative, así que anclamos el widget de forma independiente.
   const widget = await buildWidget(actor);
-  header.insertBefore(widget, header.firstElementChild);
+  header.appendChild(widget);
 }
 
 async function buildWidget(actor) {

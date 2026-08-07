@@ -8,12 +8,48 @@ const ACTIONS = {
   SET_ACTOR_COUNT: "setActorCount"
 };
 
+// Marca los updates que nosotros mismos hacemos sobre system.attributes.inspiration,
+// para que el hook de sincronización inversa pueda ignorarlos y no reaccione a su
+// propia escritura.
+const INTERNAL_UPDATE = { [MODULE_ID]: { internal: true } };
+
 export function registerInspirationHandlers() {
   onGMAction(ACTIONS.SET_SHARED_POOL, ({ value }) => applySharedPool(value));
   onGMAction(ACTIONS.SET_ACTOR_COUNT, ({ actorId, value }) => {
     const actor = game.actors.get(actorId);
     if (actor) return applyIndividualCount(actor, value);
   });
+}
+
+/**
+ * Otros módulos (automatización de reglas, macros) pueden togglear el
+ * checkbox vainilla de inspiración por su cuenta. Esto detecta esos cambios
+ * externos y ajusta nuestro contador para que no queden desincronizados.
+ * Solo el GM activo reacciona, ya que requiere permisos que un jugador
+ * normal no tiene sobre el world setting o sobre actores ajenos.
+ */
+export function registerReverseSync() {
+  Hooks.on("updateActor", onUpdateActor);
+}
+
+function onUpdateActor(actor, changes, options) {
+  if (options[MODULE_ID]?.internal) return;
+  if (game.user !== game.users.activeGM) return;
+  if (actor.type !== "character") return;
+
+  const hasInspiration = foundry.utils.getProperty(changes, "system.attributes.inspiration");
+  if (hasInspiration === undefined) return;
+
+  if (getPoolMode() === POOL_MODES.SHARED) {
+    // Solo se puede inferir con seguridad el caso "se gastó 1"; un external
+    // true->false no dice cuánto debería sumarse, así que ese caso se ignora.
+    if (!hasInspiration) applySharedPool(getSharedPool() - 1);
+    return;
+  }
+
+  const current = getIndividualCount(actor);
+  if (hasInspiration && current === 0) applyIndividualCount(actor, 1);
+  else if (!hasInspiration && current > 0) applyIndividualCount(actor, current - 1);
 }
 
 export function getPoolMode() {
@@ -83,7 +119,7 @@ async function touchSharedPoolActor(actor, poolValue) {
   if (actor.system.attributes?.inspiration !== hasInspiration) {
     updates["system.attributes.inspiration"] = hasInspiration;
   }
-  await actor.update(updates);
+  await actor.update(updates, INTERNAL_UPDATE);
 }
 
 async function applyIndividualCount(actor, value) {
@@ -94,5 +130,5 @@ async function applyIndividualCount(actor, value) {
 
 async function syncVanillaFlag(actor, hasInspiration) {
   if (actor.system.attributes?.inspiration === hasInspiration) return;
-  await actor.update({ "system.attributes.inspiration": hasInspiration });
+  await actor.update({ "system.attributes.inspiration": hasInspiration }, INTERNAL_UPDATE);
 }

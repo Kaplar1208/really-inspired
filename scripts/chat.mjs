@@ -1,5 +1,5 @@
 import { MODULE_ID } from "./constants.mjs";
-import { getCount, adjustCount } from "./inspiration.mjs";
+import { getCount, getMax, adjustCount } from "./inspiration.mjs";
 
 export function registerChatHooks() {
   Hooks.on("getChatMessageContextOptions", addRerollOption);
@@ -26,28 +26,27 @@ function canRerollWithInspiration(li) {
   if (!message?.rolls?.length) return false;
   if (!(message.rolls[0] instanceof game.dnd5e.dice.D20Roll)) return false;
 
-  const actingActor = getActingCharacter();
-  if (!actingActor) return false;
-
-  return getCount(actingActor) > 0;
+  return getSpendableCharacters().length > 0;
 }
 
 async function rerollWithInspiration(li) {
   const message = game.messages.get(li.dataset.messageId);
   if (!message) return;
 
-  const actingActor = getActingCharacter();
-  if (!actingActor) {
-    ui.notifications.warn(game.i18n.localize("REALLY-INSPIRED.Warning.NoCharacter"));
-    return;
-  }
-
-  if (!game.users.activeGM) {
+  if (!game.user.isGM && !game.users.activeGM) {
     ui.notifications.warn(game.i18n.localize("REALLY-INSPIRED.Warning.NoGM"));
     return;
   }
 
+  const actingActor = await chooseSpendingCharacter();
+  if (!actingActor) return;
+
   await adjustCount(actingActor, -1);
+  ui.notifications.info(game.i18n.format("REALLY-INSPIRED.Chat.SpentNotification", {
+    actor: actingActor.name,
+    remaining: getCount(actingActor),
+    max: getMax(actingActor)
+  }));
 
   // Re-tira la MISMA fórmula ya resuelta del roll original: como los
   // modificadores del tirador original quedaron fijos como números en esa
@@ -68,8 +67,32 @@ async function rerollWithInspiration(li) {
   });
 }
 
-function getActingCharacter() {
-  return game.user.character
-    ?? game.actors.find(a => a.type === "character" && a.isOwner)
-    ?? null;
+/** Personajes propios con al menos 1 de inspiración disponible para gastar. */
+function getSpendableCharacters() {
+  return game.actors.filter(a => a.type === "character" && a.isOwner && getCount(a) > 0);
+}
+
+/**
+ * Resuelve con qué personaje se gasta la inspiración. Si el jugador solo
+ * controla uno con inspiración disponible, se usa directo; si controla
+ * varios (p. ej. una cuenta que juega dos PJs), se le pregunta cuál.
+ */
+async function chooseSpendingCharacter() {
+  const candidates = getSpendableCharacters();
+  if (candidates.length === 0) return null;
+  if (candidates.length === 1) return candidates[0];
+
+  const buttons = candidates.map(actor => ({
+    action: actor.id,
+    label: `${actor.name} (${getCount(actor)}/${getMax(actor)})`
+  }));
+
+  const choice = await foundry.applications.api.DialogV2.wait({
+    window: { title: game.i18n.localize("REALLY-INSPIRED.Chat.ChooseCharacter.Title") },
+    content: `<p>${game.i18n.localize("REALLY-INSPIRED.Chat.ChooseCharacter.Hint")}</p>`,
+    buttons,
+    rejectClose: false
+  });
+
+  return candidates.find(a => a.id === choice) ?? null;
 }

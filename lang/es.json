@@ -13,11 +13,15 @@
   "REALLY-INSPIRED.Settings.PlayersCanAdjust.Hint": "Si está activo, los jugadores pueden usar los botones +/- en la hoja de personaje. Si está desactivado, solo el GM puede hacerlo.",
 
   "REALLY-INSPIRED.Warning.NoGM": "Se necesita un GM conectado para aplicar este cambio.",
+  "REALLY-INSPIRED.Warning.GMTimeout": "El GM no confirmó el cambio a tiempo. Verifica que siga conectado e inténtalo de nuevo.",
   "REALLY-INSPIRED.Warning.NoCharacter": "No tienes un personaje asignado para ceder inspiración.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiración",
 
   "REALLY-INSPIRED.Chat.RerollOption": "Tirar con inspiración",
   "REALLY-INSPIRED.Chat.RerollFlavorSelf": "Repetido gastando su propia inspiración.",
-  "REALLY-INSPIRED.Chat.RerollFlavorGranted": "Repetido gracias a la inspiración cedida por {actor}."
+  "REALLY-INSPIRED.Chat.RerollFlavorGranted": "Repetido gracias a la inspiración cedida por {actor}.",
+  "REALLY-INSPIRED.Chat.SpentNotification": "{actor} gastó 1 de inspiración ({remaining}/{max}).",
+  "REALLY-INSPIRED.Chat.ChooseCharacter.Title": "¿Con qué personaje cedes inspiración?",
+  "REALLY-INSPIRED.Chat.ChooseCharacter.Hint": "Controlas más de un personaje con inspiración disponible. Elige de cuál se descuenta."
 }

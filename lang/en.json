@@ -13,11 +13,15 @@
   "REALLY-INSPIRED.Settings.PlayersCanAdjust.Hint": "If enabled, players can use the +/- buttons on the character sheet. If disabled, only the GM can.",
 
   "REALLY-INSPIRED.Warning.NoGM": "A connected GM is required to apply this change.",
+  "REALLY-INSPIRED.Warning.GMTimeout": "The GM didn't confirm the change in time. Check that they're still connected and try again.",
   "REALLY-INSPIRED.Warning.NoCharacter": "You don't have a character assigned to grant inspiration.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiration",
 
   "REALLY-INSPIRED.Chat.RerollOption": "Roll with inspiration",
   "REALLY-INSPIRED.Chat.RerollFlavorSelf": "Rerolled by spending their own inspiration.",
-  "REALLY-INSPIRED.Chat.RerollFlavorGranted": "Rerolled thanks to inspiration granted by {actor}."
+  "REALLY-INSPIRED.Chat.RerollFlavorGranted": "Rerolled thanks to inspiration granted by {actor}.",
+  "REALLY-INSPIRED.Chat.SpentNotification": "{actor} spent 1 inspiration ({remaining}/{max}).",
+  "REALLY-INSPIRED.Chat.ChooseCharacter.Title": "Which character grants inspiration?",
+  "REALLY-INSPIRED.Chat.ChooseCharacter.Hint": "You control more than one character with inspiration available. Choose which one to spend it from."
 }

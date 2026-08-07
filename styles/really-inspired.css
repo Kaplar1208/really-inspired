@@ -1,11 +1,16 @@
 .really-inspired-widget {
+  position: absolute;
+  left: 3rem;
+  bottom: 0.6rem;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   padding: 0 0.4rem;
-  height: 2rem;
+  height: 1.75rem;
   border-radius: 0.25rem;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(0, 0, 0, 0.45);
+  color: var(--color-text-light-0, #fff);
   font-weight: bold;
   white-space: nowrap;
 }
