@@ -4,8 +4,8 @@ A Foundry VTT module that manages D&D5e Inspiration, with support for a pool sha
 
 ## Requirements
 
-- Foundry VTT v13.341+ (the first stable v13 release; tested on v13.351)
-- dnd5e system v5+ (v5.0.0 introduced the ApplicationV2 character sheet the sheet widget relies on; tested on v5.3.3)
+- Foundry VTT v13.341+
+- dnd5e system v5+
 
 ## What it does
 
