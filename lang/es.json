@@ -15,6 +15,8 @@
   "REALLY-INSPIRED.Warning.NoCharacter": "No tienes un personaje asignado para ceder inspiración.",
   "REALLY-INSPIRED.Warning.NoPoolActor": "No se encontró el actor del pool compartido. Pide a un GM que entre al mundo una vez para crearlo.",
   "REALLY-INSPIRED.Warning.PoolActorLocked": "Este actor es la reserva interna del pool compartido de Really Inspired: no se edita a mano.",
+  "REALLY-INSPIRED.Warning.PoolActorProtected": "Este actor es la reserva interna del pool compartido de Really Inspired: solo el GM puede modificarlo directamente.",
+  "REALLY-INSPIRED.Warning.SocketlibNotReady": "socketlib todavía no está listo. Espera un momento e inténtalo de nuevo.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiración",
 

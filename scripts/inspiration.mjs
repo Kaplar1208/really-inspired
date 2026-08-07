@@ -1,6 +1,6 @@
 import { MODULE_ID, SETTINGS, POOL_MODES } from "./constants.mjs";
 import { getMaxSharedPool } from "./settings.mjs";
-import { getPoolActor, getPoolValue, setPoolValue } from "./pool-actor.mjs";
+import { getSharedPoolValue, setSharedPoolValue, onSharedPoolChange, registerSharedPoolBackend } from "./shared-pool-backend.mjs";
 
 const FLAG_COUNT = "count";
 
@@ -9,6 +9,10 @@ const FLAG_COUNT = "count";
 const INTERNAL_UPDATE = { [MODULE_ID]: { internal: true } };
 
 export function registerInspirationHooks() {
+  registerSharedPoolBackend();
+  onSharedPoolChange(() => {
+    if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersToPool();
+  });
   Hooks.on("updateActor", onUpdateActor);
   Hooks.once("ready", () => {
     if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersToPool();
@@ -24,7 +28,7 @@ export function getMaxPerCharacter() {
 }
 
 export function getSharedPool() {
-  return getPoolValue();
+  return getSharedPoolValue();
 }
 
 export function getIndividualCount(actor) {
@@ -64,10 +68,11 @@ export async function adjustCount(actor, delta) {
 
 async function applySharedPool(value) {
   const clamped = Math.clamp(value, 0, getMaxSharedPool());
-  await setPoolValue(clamped);
+  await setSharedPoolValue(clamped);
   // No hace falta tocar aquí los actores de los demás jugadores: cada cliente
-  // sincroniza sus propios personajes al reaccionar al cambio del actor del
-  // pool (ver onUpdateActor), así nadie necesita permisos que no tiene.
+  // sincroniza sus propios personajes al reaccionar al cambio del valor del
+  // pool (ver onSharedPoolChange más arriba), así nadie necesita permisos
+  // que no tiene.
 }
 
 async function applyIndividualCount(actor, value) {
@@ -90,14 +95,6 @@ async function syncVanillaFlag(actor, hasInspiration) {
 
 function onUpdateActor(actor, changes, options) {
   if (options[MODULE_ID]?.internal) return;
-
-  const pool = getPoolActor();
-  if (pool && actor.id === pool.id) {
-    const poolChanged = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.poolValue`) !== undefined;
-    if (poolChanged && getPoolMode() === POOL_MODES.SHARED) syncMyCharactersToPool();
-    return;
-  }
-
   if (actor.type !== "character") return;
 
   // Otro módulo (automatización de reglas, macros) pudo togglear el flag

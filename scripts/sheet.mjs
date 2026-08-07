@@ -5,6 +5,16 @@ const TEMPLATE = `modules/${MODULE_ID}/templates/inspiration-widget.hbs`;
 
 export function registerSheetHooks() {
   Hooks.on("renderActorSheetV2", onRenderActorSheet);
+
+  // Cambiar poolMode/maxPerCharacter/playersCanAdjust en Configurar Ajustes
+  // no toca ningún actor, así que no dispara el auto-render de las hojas
+  // abiertas por sí solo. Forzamos ese refresco a mano aquí.
+  Hooks.on("updateSetting", setting => {
+    if (!setting.key?.startsWith(`${MODULE_ID}.`)) return;
+    for (const actor of game.actors.filter(a => a.type === "character")) {
+      if (actor.sheet?.rendered) actor.sheet.render();
+    }
+  });
 }
 
 async function onRenderActorSheet(app, html) {

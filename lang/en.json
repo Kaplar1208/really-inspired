@@ -15,6 +15,8 @@
   "REALLY-INSPIRED.Warning.NoCharacter": "You don't have a character assigned to grant inspiration.",
   "REALLY-INSPIRED.Warning.NoPoolActor": "The shared pool actor wasn't found. Ask a GM to log into the world once to create it.",
   "REALLY-INSPIRED.Warning.PoolActorLocked": "This actor is Really Inspired's internal shared pool storage: it isn't meant to be edited by hand.",
+  "REALLY-INSPIRED.Warning.PoolActorProtected": "This actor is Really Inspired's internal shared pool storage: only the GM can modify it directly.",
+  "REALLY-INSPIRED.Warning.SocketlibNotReady": "socketlib isn't ready yet. Wait a moment and try again.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiration",
 

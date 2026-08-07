@@ -17,6 +17,8 @@ export function registerPoolActor() {
   Hooks.once("ready", ensurePoolActor);
   Hooks.on("renderActorDirectory", hidePoolActorEntry);
   Hooks.on("renderActorSheetV2", blockPoolActorSheet);
+  Hooks.on("preUpdateActor", guardPoolActorUpdate);
+  Hooks.on("preDeleteActor", guardPoolActorDelete);
 }
 
 export function getPoolActor() {
@@ -59,4 +61,34 @@ function blockPoolActorSheet(app) {
   if (!app.actor?.getFlag(MODULE_ID, IS_POOL_ACTOR_FLAG)) return;
   app.close();
   ui.notifications.warn(game.i18n.localize("REALLY-INSPIRED.Warning.PoolActorLocked"));
+}
+
+/**
+ * Todos los jugadores son "Dueño" de este actor para poder escribir el
+ * número del pool sin relay, pero eso también les permite renombrarlo,
+ * cambiarle el tipo, tocar su permiso, etc. Esto limita, para quien no sea
+ * GM, los updates a únicamente el flag del valor del pool. No es una
+ * barrera de seguridad dura (un cliente modificado podría saltársela),
+ * pero evita el caso real: alguien tocándolo sin querer desde la UI.
+ */
+function guardPoolActorUpdate(actor, changes) {
+  if (!actor.getFlag(MODULE_ID, IS_POOL_ACTOR_FLAG)) return;
+  if (game.user.isGM) return;
+
+  const topLevelOk = Object.keys(changes).every(key => key === "flags");
+  const moduleFlags = changes.flags?.[MODULE_ID] ?? {};
+  const otherModuleFlags = Object.keys(changes.flags ?? {}).some(key => key !== MODULE_ID);
+  const onlyPoolValue = Object.keys(moduleFlags).every(key => key === POOL_VALUE_FLAG);
+
+  if (topLevelOk && !otherModuleFlags && onlyPoolValue) return;
+
+  ui.notifications.error(game.i18n.localize("REALLY-INSPIRED.Warning.PoolActorProtected"));
+  return false;
+}
+
+function guardPoolActorDelete(actor) {
+  if (!actor.getFlag(MODULE_ID, IS_POOL_ACTOR_FLAG)) return;
+  if (game.user.isGM) return;
+  ui.notifications.error(game.i18n.localize("REALLY-INSPIRED.Warning.PoolActorProtected"));
+  return false;
 }

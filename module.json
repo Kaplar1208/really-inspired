@@ -2,7 +2,7 @@
   "id": "really-inspired",
   "title": "Really Inspired",
   "description": "Gestiona la Inspiración de D&D5e con un pool compartido o individual, límite configurable, cesión vía chat y sincronización transparente con la Inspiración vainilla del sistema.",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "compatibility": {
     "minimum": "13",
     "verified": "13"
@@ -15,6 +15,13 @@
         "compatibility": {
           "minimum": "3.0.0"
         }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "socketlib",
+        "type": "module",
+        "reason": "Opcional: si está activo, el pool compartido se guarda como world setting escrito vía GM en vez de un actor con permiso de Dueño para todos los jugadores."
       }
     ]
   },

@@ -15,6 +15,12 @@
   white-space: nowrap;
 }
 
+.really-inspired-widget .ri-icon {
+  color: gold;
+  font-size: 0.85em;
+  margin-right: 0.1rem;
+}
+
 .really-inspired-widget .ri-sep {
   opacity: 0.6;
   margin: 0 0.1rem;
