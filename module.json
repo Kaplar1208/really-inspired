@@ -2,10 +2,10 @@
   "id": "really-inspired",
   "title": "Really Inspired",
   "description": "Gestiona la Inspiración de D&D5e con un pool compartido o individual, límite configurable, cesión vía chat y sincronización transparente con la Inspiración vainilla del sistema.",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "compatibility": {
-    "minimum": "13",
-    "verified": "13"
+    "minimum": "13.341",
+    "verified": "13.351"
   },
   "relationships": {
     "systems": [
