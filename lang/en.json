@@ -12,9 +12,9 @@
   "REALLY-INSPIRED.Settings.PlayersCanAdjust.Name": "Players can adjust inspiration",
   "REALLY-INSPIRED.Settings.PlayersCanAdjust.Hint": "If enabled, players can use the +/- buttons on the character sheet. If disabled, only the GM can.",
 
-  "REALLY-INSPIRED.Warning.NoGM": "A connected GM is required to apply this change.",
-  "REALLY-INSPIRED.Warning.GMTimeout": "The GM didn't confirm the change in time. Check that they're still connected and try again.",
   "REALLY-INSPIRED.Warning.NoCharacter": "You don't have a character assigned to grant inspiration.",
+  "REALLY-INSPIRED.Warning.NoPoolActor": "The shared pool actor wasn't found. Ask a GM to log into the world once to create it.",
+  "REALLY-INSPIRED.Warning.PoolActorLocked": "This actor is Really Inspired's internal shared pool storage: it isn't meant to be edited by hand.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiration",
 

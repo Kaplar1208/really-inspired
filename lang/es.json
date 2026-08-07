@@ -12,9 +12,9 @@
   "REALLY-INSPIRED.Settings.PlayersCanAdjust.Name": "Jugadores pueden ajustar inspiración",
   "REALLY-INSPIRED.Settings.PlayersCanAdjust.Hint": "Si está activo, los jugadores pueden usar los botones +/- en la hoja de personaje. Si está desactivado, solo el GM puede hacerlo.",
 
-  "REALLY-INSPIRED.Warning.NoGM": "Se necesita un GM conectado para aplicar este cambio.",
-  "REALLY-INSPIRED.Warning.GMTimeout": "El GM no confirmó el cambio a tiempo. Verifica que siga conectado e inténtalo de nuevo.",
   "REALLY-INSPIRED.Warning.NoCharacter": "No tienes un personaje asignado para ceder inspiración.",
+  "REALLY-INSPIRED.Warning.NoPoolActor": "No se encontró el actor del pool compartido. Pide a un GM que entre al mundo una vez para crearlo.",
+  "REALLY-INSPIRED.Warning.PoolActorLocked": "Este actor es la reserva interna del pool compartido de Really Inspired: no se edita a mano.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiración",
 

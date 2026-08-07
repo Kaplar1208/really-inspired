@@ -1,5 +1,5 @@
-import { MODULE_ID } from "./constants.mjs";
-import { getCount, getMax, adjustCount } from "./inspiration.mjs";
+import { MODULE_ID, POOL_MODES } from "./constants.mjs";
+import { getCount, getMax, adjustCount, getPoolMode, getSharedPool, getIndividualCount } from "./inspiration.mjs";
 
 export function registerChatHooks() {
   Hooks.on("getChatMessageContextOptions", addRerollOption);
@@ -33,11 +33,6 @@ async function rerollWithInspiration(li) {
   const message = game.messages.get(li.dataset.messageId);
   if (!message) return;
 
-  if (!game.user.isGM && !game.users.activeGM) {
-    ui.notifications.warn(game.i18n.localize("REALLY-INSPIRED.Warning.NoGM"));
-    return;
-  }
-
   const actingActor = await chooseSpendingCharacter();
   if (!actingActor) return;
 
@@ -67,20 +62,28 @@ async function rerollWithInspiration(li) {
   });
 }
 
-/** Personajes propios con al menos 1 de inspiración disponible para gastar. */
+/**
+ * Personajes propios con inspiración disponible para gastar. En modo
+ * compartido el número es el mismo para cualquiera de tus personajes (es el
+ * mismo pool), así que ahí no importa cuál se use; solo en modo individual
+ * cada personaje tiene su propio contador real.
+ */
 function getSpendableCharacters() {
-  return game.actors.filter(a => a.type === "character" && a.isOwner && getCount(a) > 0);
+  const owned = game.actors.filter(a => a.type === "character" && a.isOwner);
+  if (getPoolMode() === POOL_MODES.SHARED) return getSharedPool() > 0 ? owned : [];
+  return owned.filter(a => getIndividualCount(a) > 0);
 }
 
 /**
- * Resuelve con qué personaje se gasta la inspiración. Si el jugador solo
- * controla uno con inspiración disponible, se usa directo; si controla
- * varios (p. ej. una cuenta que juega dos PJs), se le pregunta cuál.
+ * Resuelve con qué personaje se gasta la inspiración. En modo compartido no
+ * hay nada que elegir (es el mismo pool), así que se usa el primero sin
+ * preguntar. En individual, si el jugador controla varios personajes con
+ * inspiración propia (p. ej. una cuenta que juega dos PJs), se le pregunta.
  */
 async function chooseSpendingCharacter() {
   const candidates = getSpendableCharacters();
   if (candidates.length === 0) return null;
-  if (candidates.length === 1) return candidates[0];
+  if (candidates.length === 1 || getPoolMode() === POOL_MODES.SHARED) return candidates[0];
 
   const buttons = candidates.map(actor => ({
     action: actor.id,

@@ -33,16 +33,6 @@ export function registerSettings() {
     type: Boolean,
     default: false
   });
-
-  // Valor actual del pool compartido. No se expone en la UI de configuración
-  // de Foundry: se gestiona desde el tracker (paso 5) y se lee/escribe en
-  // tiempo real, no como una preferencia que el GM ajusta una vez.
-  game.settings.register(MODULE_ID, SETTINGS.SHARED_POOL, {
-    scope: "world",
-    config: false,
-    type: Number,
-    default: 0
-  });
 }
 
 /**

@@ -1,55 +1,18 @@
 import { MODULE_ID, SETTINGS, POOL_MODES } from "./constants.mjs";
 import { getMaxSharedPool } from "./settings.mjs";
-import { onGMAction, runAsGM } from "./socket.mjs";
+import { getPoolActor, getPoolValue, setPoolValue } from "./pool-actor.mjs";
 
 const FLAG_COUNT = "count";
-const ACTIONS = {
-  SET_SHARED_POOL: "setSharedPool",
-  SET_ACTOR_COUNT: "setActorCount"
-};
 
 // Marca los updates que nosotros mismos hacemos sobre system.attributes.inspiration,
-// para que el hook de sincronización inversa pueda ignorarlos y no reaccione a su
-// propia escritura.
+// para que la sincronización reactiva de más abajo no reaccione a su propia escritura.
 const INTERNAL_UPDATE = { [MODULE_ID]: { internal: true } };
 
-export function registerInspirationHandlers() {
-  onGMAction(ACTIONS.SET_SHARED_POOL, ({ value }) => applySharedPool(value));
-  onGMAction(ACTIONS.SET_ACTOR_COUNT, ({ actorId, value }) => {
-    const actor = game.actors.get(actorId);
-    if (actor) return applyIndividualCount(actor, value);
-  });
-}
-
-/**
- * Otros módulos (automatización de reglas, macros) pueden togglear el
- * checkbox vainilla de inspiración por su cuenta. Esto detecta esos cambios
- * externos y ajusta nuestro contador para que no queden desincronizados.
- * Solo el GM activo reacciona, ya que requiere permisos que un jugador
- * normal no tiene sobre el world setting o sobre actores ajenos.
- */
-export function registerReverseSync() {
+export function registerInspirationHooks() {
   Hooks.on("updateActor", onUpdateActor);
-}
-
-function onUpdateActor(actor, changes, options) {
-  if (options[MODULE_ID]?.internal) return;
-  if (game.user !== game.users.activeGM) return;
-  if (actor.type !== "character") return;
-
-  const hasInspiration = foundry.utils.getProperty(changes, "system.attributes.inspiration");
-  if (hasInspiration === undefined) return;
-
-  if (getPoolMode() === POOL_MODES.SHARED) {
-    // Solo se puede inferir con seguridad el caso "se gastó 1"; un external
-    // true->false no dice cuánto debería sumarse, así que ese caso se ignora.
-    if (!hasInspiration) applySharedPool(getSharedPool() - 1);
-    return;
-  }
-
-  const current = getIndividualCount(actor);
-  if (hasInspiration && current === 0) applyIndividualCount(actor, 1);
-  else if (!hasInspiration && current > 0) applyIndividualCount(actor, current - 1);
+  Hooks.once("ready", () => {
+    if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersToPool();
+  });
 }
 
 export function getPoolMode() {
@@ -61,7 +24,7 @@ export function getMaxPerCharacter() {
 }
 
 export function getSharedPool() {
-  return game.settings.get(MODULE_ID, SETTINGS.SHARED_POOL);
+  return getPoolValue();
 }
 
 export function getIndividualCount(actor) {
@@ -84,42 +47,27 @@ export function canAdjust(actor) {
   return getPoolMode() === POOL_MODES.SHARED ? true : actor.isOwner;
 }
 
-/** Punto de entrada único para los botones +/- de la hoja. */
+/**
+ * Punto de entrada único para los botones +/- de la hoja y para el reroll
+ * de chat. Ya no hace falta relay: el pool compartido vive en un actor que
+ * todos los jugadores pueden escribir, y el modo individual siempre actúa
+ * sobre un actor que quien llama ya posee.
+ */
 export async function setCount(actor, value) {
-  if (getPoolMode() === POOL_MODES.SHARED) {
-    return runAsGM(ACTIONS.SET_SHARED_POOL, { value });
-  }
-  return runAsGM(ACTIONS.SET_ACTOR_COUNT, { actorId: actor.id, value });
+  if (getPoolMode() === POOL_MODES.SHARED) return applySharedPool(value);
+  return applyIndividualCount(actor, value);
 }
 
 export async function adjustCount(actor, delta) {
   return setCount(actor, getCount(actor) + delta);
 }
 
-/* -------------------------------------------- */
-/*  Ejecutado solo en el cliente del GM activo   */
-/* -------------------------------------------- */
-
 async function applySharedPool(value) {
   const clamped = Math.clamp(value, 0, getMaxSharedPool());
-  await game.settings.set(MODULE_ID, SETTINGS.SHARED_POOL, clamped);
-
-  // Tocar un flag por personaje fuerza un update real en cada actor, lo que
-  // hace que sus hojas abiertas se vuelvan a renderizar solas (mismo
-  // mecanismo que ya usan las hojas para refrescarse tras cualquier cambio
-  // de documento). Así el widget del pool compartido se mantiene al día en
-  // todos los clientes sin depender de una lista global de ventanas abiertas.
-  const characters = game.actors.filter(a => a.type === "character" && a.hasPlayerOwner);
-  await Promise.all(characters.map(actor => touchSharedPoolActor(actor, clamped)));
-}
-
-async function touchSharedPoolActor(actor, poolValue) {
-  const updates = { [`flags.${MODULE_ID}.poolTick`]: poolValue };
-  const hasInspiration = poolValue > 0;
-  if (actor.system.attributes?.inspiration !== hasInspiration) {
-    updates["system.attributes.inspiration"] = hasInspiration;
-  }
-  await actor.update(updates, INTERNAL_UPDATE);
+  await setPoolValue(clamped);
+  // No hace falta tocar aquí los actores de los demás jugadores: cada cliente
+  // sincroniza sus propios personajes al reaccionar al cambio del actor del
+  // pool (ver onUpdateActor), así nadie necesita permisos que no tiene.
 }
 
 async function applyIndividualCount(actor, value) {
@@ -129,6 +77,65 @@ async function applyIndividualCount(actor, value) {
 }
 
 async function syncVanillaFlag(actor, hasInspiration) {
+  if (!actor.isOwner) return;
   if (actor.system.attributes?.inspiration === hasInspiration) return;
   await actor.update({ "system.attributes.inspiration": hasInspiration }, INTERNAL_UPDATE);
+}
+
+/* -------------------------------------------- */
+/*  Sincronización reactiva, distribuida entre    */
+/*  todos los clientes (cada uno solo actúa sobre */
+/*  lo que tiene permiso de escribir)             */
+/* -------------------------------------------- */
+
+function onUpdateActor(actor, changes, options) {
+  if (options[MODULE_ID]?.internal) return;
+
+  const pool = getPoolActor();
+  if (pool && actor.id === pool.id) {
+    const poolChanged = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.poolValue`) !== undefined;
+    if (poolChanged && getPoolMode() === POOL_MODES.SHARED) syncMyCharactersToPool();
+    return;
+  }
+
+  if (actor.type !== "character") return;
+
+  // Otro módulo (automatización de reglas, macros) pudo togglear el flag
+  // vainilla por su cuenta. Si es así, ajustamos nuestro contador para no
+  // quedar desincronizados.
+  const hasInspiration = foundry.utils.getProperty(changes, "system.attributes.inspiration");
+  if (hasInspiration === undefined) return;
+  if (!isResponsibleFor(actor)) return;
+
+  if (getPoolMode() === POOL_MODES.SHARED) {
+    // Solo se puede inferir con seguridad el caso "se gastó 1"; un external
+    // false->true no dice cuánto debería sumarse, así que ese caso se ignora.
+    if (!hasInspiration) applySharedPool(getSharedPool() - 1);
+    return;
+  }
+
+  const current = getIndividualCount(actor);
+  if (hasInspiration && current === 0) applyIndividualCount(actor, 1);
+  else if (!hasInspiration && current > 0) applyIndividualCount(actor, current - 1);
+}
+
+function syncMyCharactersToPool() {
+  const hasInspiration = getSharedPool() > 0;
+  for (const actor of game.actors.filter(a => a.type === "character" && a.isOwner)) {
+    syncVanillaFlag(actor, hasInspiration);
+  }
+}
+
+/**
+ * Evita que dos clientes reaccionen al mismo cambio externo a la vez (lo que
+ * duplicaría el descuento). El dueño jugador conectado tiene prioridad; el
+ * GM solo actúa como respaldo si nadie más está conectado para ese actor.
+ */
+function isResponsibleFor(actor) {
+  if (!actor.isOwner) return false;
+  if (!game.user.isGM) return true;
+  const hasOnlineNonGMOwner = game.users.some(
+    u => u.active && !u.isGM && actor.testUserPermission(u, "OWNER")
+  );
+  return !hasOnlineNonGMOwner;
 }
