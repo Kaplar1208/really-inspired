@@ -25,6 +25,15 @@ export function registerSettings() {
     range: { min: 1, max: 20, step: 1 }
   });
 
+  game.settings.register(MODULE_ID, SETTINGS.PLAYERS_CAN_ADJUST, {
+    name: "REALLY-INSPIRED.Settings.PlayersCanAdjust.Name",
+    hint: "REALLY-INSPIRED.Settings.PlayersCanAdjust.Hint",
+    scope: "world",
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
   // Valor actual del pool compartido. No se expone en la UI de configuración
   // de Foundry: se gestiona desde el tracker (paso 5) y se lee/escribe en
   // tiempo real, no como una preferencia que el GM ajusta una vez.

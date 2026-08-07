@@ -1,1 +1,34 @@
-/* Really Inspired */
+.really-inspired-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.4rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+  background: rgba(0, 0, 0, 0.1);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.really-inspired-widget .ri-sep {
+  opacity: 0.6;
+  margin: 0 0.1rem;
+}
+
+.really-inspired-widget .ri-adjust {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.2rem;
+}
+
+.really-inspired-widget .ri-adjust:hover {
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.really-inspired-widget .ri-adjust:disabled {
+  opacity: 0.35;
+  cursor: default;
+}

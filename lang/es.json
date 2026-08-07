@@ -7,5 +7,17 @@
   "REALLY-INSPIRED.Settings.PoolMode.Individual": "Individual por personaje",
 
   "REALLY-INSPIRED.Settings.MaxPerCharacter.Name": "Máximo por personaje",
-  "REALLY-INSPIRED.Settings.MaxPerCharacter.Hint": "Tope de inspiración por personaje. En modo compartido, el máximo del pool es este valor multiplicado por el número de personajes de jugador."
+  "REALLY-INSPIRED.Settings.MaxPerCharacter.Hint": "Tope de inspiración por personaje. En modo compartido, el máximo del pool es este valor multiplicado por el número de personajes de jugador.",
+
+  "REALLY-INSPIRED.Settings.PlayersCanAdjust.Name": "Jugadores pueden ajustar inspiración",
+  "REALLY-INSPIRED.Settings.PlayersCanAdjust.Hint": "Si está activo, los jugadores pueden usar los botones +/- en la hoja de personaje. Si está desactivado, solo el GM puede hacerlo.",
+
+  "REALLY-INSPIRED.Warning.NoGM": "Se necesita un GM conectado para aplicar este cambio.",
+  "REALLY-INSPIRED.Warning.NoCharacter": "No tienes un personaje asignado para ceder inspiración.",
+
+  "REALLY-INSPIRED.Widget.Tooltip": "Inspiración",
+
+  "REALLY-INSPIRED.Chat.RerollOption": "Tirar con inspiración",
+  "REALLY-INSPIRED.Chat.RerollFlavorSelf": "Repetido gastando su propia inspiración.",
+  "REALLY-INSPIRED.Chat.RerollFlavorGranted": "Repetido gracias a la inspiración cedida por {actor}."
 }

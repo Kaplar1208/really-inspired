@@ -7,5 +7,17 @@
   "REALLY-INSPIRED.Settings.PoolMode.Individual": "Individual per character",
 
   "REALLY-INSPIRED.Settings.MaxPerCharacter.Name": "Max per character",
-  "REALLY-INSPIRED.Settings.MaxPerCharacter.Hint": "Inspiration cap per character. In shared mode, the pool's maximum is this value multiplied by the number of player characters."
+  "REALLY-INSPIRED.Settings.MaxPerCharacter.Hint": "Inspiration cap per character. In shared mode, the pool's maximum is this value multiplied by the number of player characters.",
+
+  "REALLY-INSPIRED.Settings.PlayersCanAdjust.Name": "Players can adjust inspiration",
+  "REALLY-INSPIRED.Settings.PlayersCanAdjust.Hint": "If enabled, players can use the +/- buttons on the character sheet. If disabled, only the GM can.",
+
+  "REALLY-INSPIRED.Warning.NoGM": "A connected GM is required to apply this change.",
+  "REALLY-INSPIRED.Warning.NoCharacter": "You don't have a character assigned to grant inspiration.",
+
+  "REALLY-INSPIRED.Widget.Tooltip": "Inspiration",
+
+  "REALLY-INSPIRED.Chat.RerollOption": "Roll with inspiration",
+  "REALLY-INSPIRED.Chat.RerollFlavorSelf": "Rerolled by spending their own inspiration.",
+  "REALLY-INSPIRED.Chat.RerollFlavorGranted": "Rerolled thanks to inspiration granted by {actor}."
 }

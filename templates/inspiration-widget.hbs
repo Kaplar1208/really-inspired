@@ -1,0 +1,13 @@
+<div class="really-inspired-widget" data-tooltip="{{localize 'REALLY-INSPIRED.Widget.Tooltip'}}">
+  {{#if canAdjust}}
+  <button type="button" class="ri-adjust ri-decrement unbutton" {{#unless canDecrement}}disabled{{/unless}}>
+    <i class="fas fa-minus" inert></i>
+  </button>
+  {{/if}}
+  <span class="ri-count">{{current}}</span><span class="ri-sep">/</span><span class="ri-max">{{max}}</span>
+  {{#if canAdjust}}
+  <button type="button" class="ri-adjust ri-increment unbutton" {{#unless canIncrement}}disabled{{/unless}}>
+    <i class="fas fa-plus" inert></i>
+  </button>
+  {{/if}}
+</div>
