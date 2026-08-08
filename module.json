@@ -2,7 +2,7 @@
   "id": "really-inspired",
   "title": "Really Inspired",
   "description": "Gestiona la Inspiración de D&D5e con un pool compartido o individual, límite configurable, cesión vía chat y sincronización transparente con la Inspiración vainilla del sistema.",
-  "version": "0.6.3",
+  "version": "0.7.0",
   "compatibility": {
     "minimum": "13.341",
     "verified": "13.351"
@@ -16,6 +16,13 @@
           "minimum": "5.0.0",
           "verified": "5.3.3"
         }
+      }
+    ],
+    "recommends": [
+      {
+        "id": "tidy5e-sheet",
+        "type": "module",
+        "reason": "Optional: if active (quadrone theme), the inspiration counter is shown through Tidy5e's own banked-inspiration UI instead of the default dnd5e sheet widget."
       }
     ]
   },
