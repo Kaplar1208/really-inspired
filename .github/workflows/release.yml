@@ -55,4 +55,6 @@ jobs:
           tag_name: ${{ steps.version.outputs.tag }}
           name: ${{ steps.version.outputs.tag }}
           draft: true
-          files: really-inspired.zip
+          files: |
+            really-inspired.zip
+            module.json
