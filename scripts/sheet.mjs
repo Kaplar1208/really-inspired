@@ -21,6 +21,14 @@ async function onRenderActorSheet(app, html) {
   const actor = app.actor;
   if (actor?.type !== "character") return;
 
+  // renderActorSheetV2 es genérico: dispara para CUALQUIER hoja de
+  // personaje basada en ApplicationV2, no solo la de dnd5e. Módulos como
+  // Tidy5e Sheet reusan nombres de clase parecidos ("sheet-header",
+  // "inspiration"), así que sin este chequeo terminaríamos borrando y
+  // reemplazando la UI de OTRO módulo por accidente. Solo actuamos si es
+  // realmente la hoja por defecto de dnd5e.
+  if (app.constructor.name !== "CharacterActorSheet") return;
+
   const root = html instanceof HTMLElement ? html : html[0];
   const header = root.querySelector("header.sheet-header");
   if (!header) return;
