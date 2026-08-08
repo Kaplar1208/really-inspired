@@ -6,6 +6,7 @@ A Foundry VTT module that manages D&D5e Inspiration, with support for a pool sha
 
 - Foundry VTT v13.341+
 - dnd5e system v5+
+- Tidy5e Sheet (optional, quadrone theme) for native counter integration
 
 ## What it does
 
@@ -21,6 +22,10 @@ There's also a setting for the **maximum Inspiration per character**. In shared 
 ### A visible counter on the character sheet
 
 Instead of the small Inspiration icon (which can only be checked or unchecked), the character sheet shows a clear counter with the current amount and the maximum, plus buttons to add or remove. By default only the GM can use them, but there's an option to let players adjust their own Inspiration too.
+
+### Tidy5e Sheet support
+
+If [Tidy5e Sheet](https://foundryvtt.com/packages/tidy5e-sheet) is active (quadrone theme), the counter shows through Tidy5e's own built-in inspiration UI instead of a separate widget, using Tidy5e's official integration API — no visual conflicts between the two modules.
 
 ### Granting inspiration from chat
 
