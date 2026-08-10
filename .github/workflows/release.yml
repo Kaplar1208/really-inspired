@@ -1,5 +1,4 @@
 name: Release
-
 # Se dispara solo cuando module.json cambia en un push a main (o sea, cuando
 # subes un bump de versión), y también se puede lanzar a mano desde la
 # pestaña "Actions" de GitHub por si hay que reintentar algo.
@@ -9,26 +8,22 @@ on:
     paths:
       - module.json
   workflow_dispatch:
-
 # El token automático de GitHub necesita permiso de escritura para poder
 # crear el tag y el Release.
 permissions:
   contents: write
-
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Leer versión desde module.json
         id: version
         run: |
           VERSION=$(node -p "require('./module.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
-
       - name: Revisar si ya existe un Release para esta versión
         id: check_release
         env:
@@ -37,24 +32,4 @@ jobs:
           if gh release view "${{ steps.version.outputs.tag }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
           else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Armar el zip del módulo
-        if: steps.check_release.outputs.exists == 'false'
-        run: |
-          zip -r really-inspired.zip module.json README.md LICENSE lang scripts styles templates
-
-      # Se crea como borrador para que tú termines de escribir el título y
-      # la descripción en GitHub antes de publicarlo, en vez de generarlos
-      # automáticamente.
-      - name: Crear Release (borrador)
-        if: steps.check_release.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          name: ${{ steps.version.outputs.tag }}
-          draft: true
-          files: |
-            really-inspired.zip
-            module.json
+            echo
