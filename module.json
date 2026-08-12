@@ -1,8 +1,8 @@
 {
   "id": "really-inspired",
   "title": "Really Inspired",
-  "description": "Gestiona la Inspiración de D&D5e con un pool compartido o individual, límite configurable, cesión vía chat y sincronización transparente con la Inspiración vainilla del sistema.",
-  "version": "0.7.1",
+  "description": "Manage D&D 5e Inspiration using a shared or individual pool, with a configurable limit, chat-based transfer, and seamless synchronization with the system's native Inspiration.",
+  "version": "0.7.2",
   "compatibility": {
     "minimum": "13.341",
     "verified": "13.351"
@@ -22,45 +22,13 @@
       {
         "id": "tidy5e-sheet",
         "type": "module",
-        "reason": "Optional: if active (quadrone theme), the inspiration counter is shown through Tidy5e's own banked-inspiration UI instead of the default dnd5e sheet widget."
+        "reason": "Optional: if active, the inspiration counter is shown through Tidy5e's own banked-inspiration UI instead of the default dnd5e sheet widget."
       }
     ]
   },
-  "media": [
-    {
-      "type": "cover",
-      "url": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/main/docs/images/sheet-individual.png",
-      "caption": "Inspiration counter on the character sheet (individual mode)"
-    },
-    {
-      "type": "screenshot",
-      "url": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/main/docs/images/sheet-shared.png",
-      "caption": "Inspiration counter in shared mode, showing the party's pooled total"
-    },
-    {
-      "type": "screenshot",
-      "url": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/main/docs/images/settings.png",
-      "caption": "Configure Settings panel"
-    },
-    {
-      "type": "screenshot",
-      "url": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/main/docs/images/chat-reroll.png",
-      "caption": "Granting a reroll from the chat log's context menu"
-    },
-    {
-      "type": "screenshot",
-      "url": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/main/docs/images/gm-grant-dialog.png",
-      "caption": "GM dialog for granting inspiration, opened with the \"I\" keybind"
-    },
-    {
-      "type": "screenshot",
-      "url": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/main/docs/images/tidy5e.png",
-      "caption": "Native counter integration on Tidy5e Sheet"
-    }
-  ],
   "authors": [
     {
-      "name": "Guillermo Castro"
+      "name": "Kaplar"
     }
   ],
   "esmodules": [
