@@ -1,5 +1,7 @@
 # Really Inspired
 
+![Latest Release Download Count](https://img.shields.io/github/downloads/Kaplar1208/really-inspired/total?style=for-the-badge) ![GitHub issues](https://img.shields.io/github/issues/Kaplar1208/really-inspired?style=for-the-badge) ![GitHub release](https://img.shields.io/github/v/release/Kaplar1208/really-inspired?style=for-the-badge) ![Foundry Core Compatible Version](https://img.shields.io/badge/dynamic/json.svg?url=https%3A%2F%2Fgithub.com%2FKaplar1208%2Freally-inspired%2Freleases%2Flatest%2Fdownload%2Fmodule.json&label=Foundry%20Version&query=$.compatibility.verified&colorB=orange&style=for-the-badge)
+
 A Foundry VTT module that manages D&D5e Inspiration, with support for a pool shared by the whole party or an individual counter per character.
 
 ## Requirements
