@@ -21,21 +21,37 @@ From **Configure Settings**, the GM chooses how Inspiration works at the table:
 
 There's also a setting for the **maximum Inspiration per character**. In shared mode, the pool's maximum is calculated automatically as that number multiplied by the number of player characters.
 
+![Configure Settings panel showing the module's three settings](docs/images/settings.png)
+
 ### A visible counter on the character sheet
 
 Instead of the small Inspiration icon (which can only be checked or unchecked), the character sheet shows a clear counter with the current amount and the maximum, plus buttons to add or remove. By default only the GM can use them, but there's an option to let players adjust their own Inspiration too.
+
+Individual mode:
+
+![Character sheet showing the inspiration counter in individual mode](docs/images/sheet-individual.png)
+
+Shared mode — the maximum shown is the per-character cap multiplied by the number of party members:
+
+![Character sheet showing the inspiration counter in shared mode](docs/images/sheet-shared.png)
 
 ### Tidy5e Sheet support
 
 If [Tidy5e Sheet](https://foundryvtt.com/packages/tidy5e-sheet) is active (quadrone theme), the counter shows through Tidy5e's own built-in inspiration UI instead of a separate widget, using Tidy5e's official integration API — no visual conflicts between the two modules.
 
+![Tidy5e Sheet showing its native inspiration counter](docs/images/tidy5e.png)
+
 ### Granting inspiration from chat
 
 When someone makes a roll (a skill check, saving throw, or attack), any player can **right-click that chat message** and choose **"Roll with inspiration"**. That spends 1 inspiration from whoever clicked it (not from whoever made the roll) and creates a new roll to redo that check, always using the modifiers of the character who rolled originally. This lets a player "gift" a reroll to a teammate by spending their own Inspiration.
 
+![Chat message context menu showing the "Roll with inspiration" option](docs/images/chat-reroll.png)
+
 ### The GM can grant inspiration with a keyboard shortcut
 
 Pressing the **"I"** key opens a small dialog for the GM to pick which character gets 1 Inspiration, without needing to open their sheet. The party finds out via a chat message.
+
+![GM dialog for granting inspiration to a chosen character](docs/images/gm-grant-dialog.png)
 
 ### Compatible with the system's regular Inspiration
 
