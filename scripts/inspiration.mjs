@@ -104,8 +104,11 @@ async function spendFromGroup(amount, actingActor) {
   // el resto del módulo. Escribimos la solicitud en NUESTRO propio actor
   // (siempre permitido); quien sea dueño de "holder" —o el GM como
   // respaldo— la recibe vía el update normal y la aplica (ver onUpdateActor
-  // más abajo). El "ts" garantiza que cada solicitud sea un cambio real
-  // aunque se repita el mismo holder/amount, para que el update dispare.
+  // más abajo). Cada solicitud usa una CLAVE nueva (no solo un valor nuevo
+  // dentro del mismo objeto): si se repite el mismo holder, Foundry solo
+  // manda a los demás clientes lo que realmente cambió, y un valor idéntico
+  // al de la solicitud anterior no cuenta como cambio y se omite del aviso.
+  // Con una clave nueva cada vez, el objeto completo siempre viaja entero.
   const hasEligibleRecipient = game.users.some(
     u => u.active && (u.isGM || holder.testUserPermission(u, "OWNER"))
   );
@@ -113,8 +116,10 @@ async function spendFromGroup(amount, actingActor) {
     ui.notifications.warn(game.i18n.localize("REALLY-INSPIRED.Warning.NoGMForBorrow"));
     return;
   }
-  console.log(`${MODULE_ID} | [debug] writing pendingBorrow`, { on: actingActor.name, holderId: holder.id, holderName: holder.name, amount });
-  await actingActor.setFlag(MODULE_ID, FLAG_PENDING_BORROW, { holderId: holder.id, amount, ts: Date.now() });
+  const requestId = foundry.utils.randomID();
+  await actingActor.update({
+    [`flags.${MODULE_ID}.${FLAG_PENDING_BORROW}.${requestId}`]: { holderId: holder.id, amount }
+  });
 }
 
 function findMaxHolder() {
@@ -127,12 +132,8 @@ function findMaxHolder() {
 
 async function applySpendFromActorId(actorId, amount) {
   const actor = game.actors.get(actorId);
-  if (!actor) {
-    console.log(`${MODULE_ID} | [debug] applySpendFromActorId: actor not found for id`, actorId);
-    return;
-  }
+  if (!actor) return;
   const current = getIndividualCount(actor);
-  console.log(`${MODULE_ID} | [debug] applySpendFromActorId`, { actor: actor.name, current, amount, isOwner: actor.isOwner });
   if (current >= amount) return applyIndividualCount(actor, current - amount);
 }
 
@@ -141,7 +142,7 @@ async function applyIndividualCount(actor, value) {
   try {
     await actor.setFlag(MODULE_ID, FLAG_COUNT, clamped);
   } catch (err) {
-    console.error(`${MODULE_ID} | [debug] setFlag failed for`, actor.name, err);
+    console.error(`${MODULE_ID} | Failed to update inspiration flag for`, actor.name, err);
     return;
   }
   await syncVanillaFlag(actor, getCount(actor) > 0);
@@ -163,22 +164,17 @@ function onUpdateActor(actor, changes, options) {
   if (options[MODULE_ID]?.internal) return;
   if (actor.type !== "character") return;
 
-  // Solicitud de préstamo escrita en el actor de quien gasta (ver
-  // spendFromGroup): si somos responsables del personaje mencionado,
-  // aplicamos el descuento y no seguimos con el resto de este update.
-  const pendingBorrow = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_PENDING_BORROW}`);
-  if (pendingBorrow) {
-    const holder = game.actors.get(pendingBorrow.holderId);
-    const responsible = holder ? isResponsibleFor(holder) : false;
-    console.log(`${MODULE_ID} | [debug] pendingBorrow received by`, game.user.name, {
-      isGM: game.user.isGM,
-      holderName: holder?.name,
-      holderId: pendingBorrow.holderId,
-      responsible
-    });
-    if (holder && responsible) {
-      console.log(`${MODULE_ID} | [debug] applying spend to`, holder.name);
-      applySpendFromActorId(pendingBorrow.holderId, pendingBorrow.amount);
+  // Solicitudes de préstamo escritas en el actor de quien gasta (ver
+  // spendFromGroup): cada una vive bajo su propia clave (ver por qué en
+  // spendFromGroup). Por cada solicitud nueva en este update, si somos
+  // responsables del personaje mencionado, aplicamos el descuento.
+  const pendingBorrows = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_PENDING_BORROW}`);
+  if (pendingBorrows) {
+    for (const request of Object.values(pendingBorrows)) {
+      const holder = game.actors.get(request.holderId);
+      if (holder && isResponsibleFor(holder)) {
+        applySpendFromActorId(request.holderId, request.amount);
+      }
     }
     return;
   }
