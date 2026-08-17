@@ -56,6 +56,6 @@
     }
   ],
   "url": "https://github.com/Kaplar1208/really-inspired",
-  "manifest": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/main/module.json",
-  "download": "https://github.com/Kaplar1208/really-inspired/releases/latest/download/really-inspired.zip"
+  "manifest": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/dev/module.json",
+  "download": "https://github.com/Kaplar1208/really-inspired/archive/refs/heads/dev.zip"
 }
