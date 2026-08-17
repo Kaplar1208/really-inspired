@@ -27,9 +27,24 @@ export function registerSocketlibBridge(handlerFn) {
   }
 }
 
+/**
+ * Nunca debe poder tumbar el resto del init del módulo si algo sale mal
+ * (por ejemplo, socketlib.registerModule() devuelve undefined si el
+ * manifiesto no declara "socket": true, o si socketlib cambia su API en
+ * el futuro). Si falla, seguimos sin socketlib en vez de romper todo.
+ */
 function setUpSocket(handlerFn) {
-  socket = socketlib.registerModule(MODULE_ID);
-  socket.register("spendFromActor", handlerFn);
+  try {
+    const registered = socketlib.registerModule(MODULE_ID);
+    if (!registered) {
+      console.warn(`${MODULE_ID} | socketlib.registerModule() did not return a socket; continuing without socketlib.`);
+      return;
+    }
+    registered.register("spendFromActor", handlerFn);
+    socket = registered;
+  } catch (err) {
+    console.warn(`${MODULE_ID} | Failed to set up socketlib integration; continuing without it.`, err);
+  }
 }
 
 export function getSocket() {

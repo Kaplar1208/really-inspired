@@ -2,7 +2,8 @@
   "id": "really-inspired",
   "title": "Really Inspired",
   "description": "Manage D&D 5e Inspiration using a shared or individual pool, with a configurable limit, chat-based transfer, and seamless synchronization with the system's native Inspiration.",
-  "version": "0.7.5",
+  "version": "0.7.6",
+  "socket": true,
   "compatibility": {
     "minimum": "13.341",
     "verified": "13.351"
