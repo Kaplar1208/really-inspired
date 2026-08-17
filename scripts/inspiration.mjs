@@ -3,7 +3,7 @@ import { getMaxSharedPool } from "./settings.mjs";
 import { isSocketlibAvailable, registerSocketlibBridge, getSocket } from "./socketlib-bridge.mjs";
 
 const FLAG_COUNT = "count";
-const SOCKET_CHANNEL = `module.${MODULE_ID}`;
+const FLAG_PENDING_BORROW = "pendingBorrow";
 
 // Marca los updates que nosotros mismos hacemos sobre system.attributes.inspiration,
 // para que la sincronización reactiva de más abajo no reaccione a su propia escritura.
@@ -13,7 +13,6 @@ export function registerInspirationHooks() {
   Hooks.on("updateActor", onUpdateActor);
   registerSocketlibBridge(applySpendFromActorId);
   Hooks.once("ready", () => {
-    game.socket.on(SOCKET_CHANNEL, onSpendRequest);
     if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersVanillaFlags();
   });
 }
@@ -77,10 +76,10 @@ export async function spendInspiration(actingActor, amount = 1) {
   if (getPoolMode() !== POOL_MODES.SHARED || own >= amount) {
     return applyIndividualCount(actingActor, own - amount);
   }
-  return spendFromGroup(amount);
+  return spendFromGroup(amount, actingActor);
 }
 
-async function spendFromGroup(amount) {
+async function spendFromGroup(amount, actingActor) {
   const holder = findMaxHolder();
   if (!holder) return;
 
@@ -89,11 +88,8 @@ async function spendFromGroup(amount) {
   }
 
   // No somos dueños de quien tiene más: hace falta que alguien con permiso
-  // aplique el descuento por nosotros. Los sockets de módulo de un jugador
-  // normal no le llegan de forma confiable a OTRO jugador normal — solo al
-  // GM sí. Con socketlib es una única ejecución garantizada; sin él, se
-  // depende de que el GM esté conectado (nada que aprobar de su parte, se
-  // aplica solo en segundo plano).
+  // aplique el descuento por nosotros. Con socketlib es una única ejecución
+  // garantizada, sin depender de quién esté conectado.
   if (isSocketlibAvailable()) {
     const socket = getSocket();
     if (socket) {
@@ -102,11 +98,22 @@ async function spendFromGroup(amount) {
     }
   }
 
-  if (!game.users.activeGM) {
+  // Sin socketlib: en vez de un socket propio (cuya entrega entre dos
+  // clientes que no son GM no se pudo confirmar como confiable), usamos el
+  // mismo mecanismo de sincronización de documentos que ya es confiable en
+  // el resto del módulo. Escribimos la solicitud en NUESTRO propio actor
+  // (siempre permitido); quien sea dueño de "holder" —o el GM como
+  // respaldo— la recibe vía el update normal y la aplica (ver onUpdateActor
+  // más abajo). El "ts" garantiza que cada solicitud sea un cambio real
+  // aunque se repita el mismo holder/amount, para que el update dispare.
+  const hasEligibleRecipient = game.users.some(
+    u => u.active && (u.isGM || holder.testUserPermission(u, "OWNER"))
+  );
+  if (!hasEligibleRecipient) {
     ui.notifications.warn(game.i18n.localize("REALLY-INSPIRED.Warning.NoGMForBorrow"));
     return;
   }
-  game.socket.emit(SOCKET_CHANNEL, { type: "spendFrom", actorId: holder.id, amount });
+  await actingActor.setFlag(MODULE_ID, FLAG_PENDING_BORROW, { holderId: holder.id, amount, ts: Date.now() });
 }
 
 function findMaxHolder() {
@@ -122,12 +129,6 @@ async function applySpendFromActorId(actorId, amount) {
   if (!actor) return;
   const current = getIndividualCount(actor);
   if (current >= amount) return applyIndividualCount(actor, current - amount);
-}
-
-function onSpendRequest(message = {}) {
-  if (message.type !== "spendFrom") return;
-  if (!game.user.isGM) return;
-  applySpendFromActorId(message.actorId, message.amount);
 }
 
 async function applyIndividualCount(actor, value) {
@@ -151,6 +152,18 @@ async function syncVanillaFlag(actor, hasInspiration) {
 function onUpdateActor(actor, changes, options) {
   if (options[MODULE_ID]?.internal) return;
   if (actor.type !== "character") return;
+
+  // Solicitud de préstamo escrita en el actor de quien gasta (ver
+  // spendFromGroup): si somos responsables del personaje mencionado,
+  // aplicamos el descuento y no seguimos con el resto de este update.
+  const pendingBorrow = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_PENDING_BORROW}`);
+  if (pendingBorrow) {
+    const holder = game.actors.get(pendingBorrow.holderId);
+    if (holder && isResponsibleFor(holder)) {
+      applySpendFromActorId(pendingBorrow.holderId, pendingBorrow.amount);
+    }
+    return;
+  }
 
   // Cambió el número de ALGÚN personaje: en modo compartido eso mueve el
   // total del grupo, así que cada cliente revisa si el checkbox vainilla de
@@ -177,7 +190,7 @@ function onUpdateActor(actor, changes, options) {
     // El flag de este personaje mostraba "true" solo porque el grupo tenía
     // inspiración (su propio número está en 0); el gasto externo se
     // absorbe de quien realmente tenga con qué pagarlo.
-    spendFromGroup(1);
+    spendFromGroup(1, actor);
   }
 }
 

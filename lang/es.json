@@ -14,7 +14,7 @@
 
   "REALLY-INSPIRED.Warning.NoCharacter": "No tienes un personaje asignado para ceder inspiración.",
   "REALLY-INSPIRED.Warning.AlreadyMax": "{actor} ya tiene el máximo de inspiración.",
-  "REALLY-INSPIRED.Warning.NoGMForBorrow": "No se pudo aplicar: se necesita un GM conectado para gastar la inspiración de otro personaje.",
+  "REALLY-INSPIRED.Warning.NoGMForBorrow": "No se pudo aplicar: hace falta que el dueño de ese personaje o el GM estén conectados.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiración",
 

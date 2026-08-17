@@ -14,7 +14,7 @@
 
   "REALLY-INSPIRED.Warning.NoCharacter": "You don't have a character assigned to grant inspiration.",
   "REALLY-INSPIRED.Warning.AlreadyMax": "{actor} already has the maximum amount of inspiration.",
-  "REALLY-INSPIRED.Warning.NoGMForBorrow": "Couldn't apply: a connected GM is required to spend another character's inspiration.",
+  "REALLY-INSPIRED.Warning.NoGMForBorrow": "Couldn't apply: that character's owner or a GM needs to be connected.",
 
   "REALLY-INSPIRED.Widget.Tooltip": "Inspiration",
 
