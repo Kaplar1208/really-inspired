@@ -113,6 +113,7 @@ async function spendFromGroup(amount, actingActor) {
     ui.notifications.warn(game.i18n.localize("REALLY-INSPIRED.Warning.NoGMForBorrow"));
     return;
   }
+  console.log(`${MODULE_ID} | [debug] writing pendingBorrow`, { on: actingActor.name, holderId: holder.id, holderName: holder.name, amount });
   await actingActor.setFlag(MODULE_ID, FLAG_PENDING_BORROW, { holderId: holder.id, amount, ts: Date.now() });
 }
 
@@ -126,14 +127,23 @@ function findMaxHolder() {
 
 async function applySpendFromActorId(actorId, amount) {
   const actor = game.actors.get(actorId);
-  if (!actor) return;
+  if (!actor) {
+    console.log(`${MODULE_ID} | [debug] applySpendFromActorId: actor not found for id`, actorId);
+    return;
+  }
   const current = getIndividualCount(actor);
+  console.log(`${MODULE_ID} | [debug] applySpendFromActorId`, { actor: actor.name, current, amount, isOwner: actor.isOwner });
   if (current >= amount) return applyIndividualCount(actor, current - amount);
 }
 
 async function applyIndividualCount(actor, value) {
   const clamped = Math.clamp(value, 0, getMaxPerCharacter());
-  await actor.setFlag(MODULE_ID, FLAG_COUNT, clamped);
+  try {
+    await actor.setFlag(MODULE_ID, FLAG_COUNT, clamped);
+  } catch (err) {
+    console.error(`${MODULE_ID} | [debug] setFlag failed for`, actor.name, err);
+    return;
+  }
   await syncVanillaFlag(actor, getCount(actor) > 0);
 }
 
@@ -159,7 +169,15 @@ function onUpdateActor(actor, changes, options) {
   const pendingBorrow = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_PENDING_BORROW}`);
   if (pendingBorrow) {
     const holder = game.actors.get(pendingBorrow.holderId);
-    if (holder && isResponsibleFor(holder)) {
+    const responsible = holder ? isResponsibleFor(holder) : false;
+    console.log(`${MODULE_ID} | [debug] pendingBorrow received by`, game.user.name, {
+      isGM: game.user.isGM,
+      holderName: holder?.name,
+      holderId: pendingBorrow.holderId,
+      responsible
+    });
+    if (holder && responsible) {
+      console.log(`${MODULE_ID} | [debug] applying spend to`, holder.name);
       applySpendFromActorId(pendingBorrow.holderId, pendingBorrow.amount);
     }
     return;
