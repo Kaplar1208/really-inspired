@@ -2,7 +2,7 @@
   "id": "really-inspired",
   "title": "Really Inspired",
   "description": "Manage D&D 5e Inspiration using a shared or individual pool, with a configurable limit, chat-based transfer, and seamless synchronization with the system's native Inspiration.",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "compatibility": {
     "minimum": "13.341",
     "verified": "13.351"
@@ -23,6 +23,11 @@
         "id": "tidy5e-sheet",
         "type": "module",
         "reason": "Optional: if active, the inspiration counter is shown through Tidy5e's own banked-inspiration UI instead of the default dnd5e sheet widget."
+      },
+      {
+        "id": "socketlib",
+        "type": "module",
+        "reason": "Optional: improves reliability of one specific case in shared mode - spending inspiration that currently belongs to another character."
       }
     ]
   },

@@ -9,6 +9,7 @@ A Foundry VTT module that manages D&D5e Inspiration, with support for a pool sha
 - Foundry VTT v13.341+
 - dnd5e system v5+
 - Tidy5e Sheet (optional, quadrone theme) for native counter integration
+- [socketlib](https://foundryvtt.com/packages/socketlib) (optional) improves reliability of one specific case in shared mode: spending inspiration that currently belongs to another character. Without it, that specific action needs a connected GM; everything else in the module works without one.
 
 ## What it does
 

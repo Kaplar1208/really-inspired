@@ -1,5 +1,6 @@
 import { MODULE_ID, SETTINGS, POOL_MODES } from "./constants.mjs";
 import { getMaxSharedPool } from "./settings.mjs";
+import { isSocketlibAvailable, registerSocketlibBridge, getSocket } from "./socketlib-bridge.mjs";
 
 const FLAG_COUNT = "count";
 const SOCKET_CHANNEL = `module.${MODULE_ID}`;
@@ -10,6 +11,7 @@ const INTERNAL_UPDATE = { [MODULE_ID]: { internal: true } };
 
 export function registerInspirationHooks() {
   Hooks.on("updateActor", onUpdateActor);
+  registerSocketlibBridge(applySpendFromActorId);
   Hooks.once("ready", () => {
     game.socket.on(SOCKET_CHANNEL, onSpendRequest);
     if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersVanillaFlags();
@@ -85,8 +87,25 @@ async function spendFromGroup(amount) {
   if (holder.isOwner) {
     return applyIndividualCount(holder, getIndividualCount(holder) - amount);
   }
-  // No somos dueños de quien tiene más: se lo pedimos a quien sí lo sea (o
-  // al GM como respaldo). Ver isResponsibleFor/onSpendRequest más abajo.
+
+  // No somos dueños de quien tiene más: hace falta que alguien con permiso
+  // aplique el descuento por nosotros. Los sockets de módulo de un jugador
+  // normal no le llegan de forma confiable a OTRO jugador normal — solo al
+  // GM sí. Con socketlib es una única ejecución garantizada; sin él, se
+  // depende de que el GM esté conectado (nada que aprobar de su parte, se
+  // aplica solo en segundo plano).
+  if (isSocketlibAvailable()) {
+    const socket = getSocket();
+    if (socket) {
+      await socket.executeAsGM(applySpendFromActorId, holder.id, amount);
+      return;
+    }
+  }
+
+  if (!game.users.activeGM) {
+    ui.notifications.warn(game.i18n.localize("REALLY-INSPIRED.Warning.NoGMForBorrow"));
+    return;
+  }
   game.socket.emit(SOCKET_CHANNEL, { type: "spendFrom", actorId: holder.id, amount });
 }
 
@@ -98,12 +117,17 @@ function findMaxHolder() {
   return best && getIndividualCount(best) > 0 ? best : null;
 }
 
+async function applySpendFromActorId(actorId, amount) {
+  const actor = game.actors.get(actorId);
+  if (!actor) return;
+  const current = getIndividualCount(actor);
+  if (current >= amount) return applyIndividualCount(actor, current - amount);
+}
+
 function onSpendRequest(message = {}) {
   if (message.type !== "spendFrom") return;
-  const actor = game.actors.get(message.actorId);
-  if (!actor || !isResponsibleFor(actor)) return;
-  const current = getIndividualCount(actor);
-  if (current >= message.amount) applyIndividualCount(actor, current - message.amount);
+  if (!game.user.isGM) return;
+  applySpendFromActorId(message.actorId, message.amount);
 }
 
 async function applyIndividualCount(actor, value) {
