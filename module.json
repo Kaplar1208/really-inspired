@@ -2,7 +2,7 @@
   "id": "really-inspired",
   "title": "Really Inspired",
   "description": "Manage D&D 5e Inspiration using a shared or individual pool, with a configurable limit, chat-based transfer, and seamless synchronization with the system's native Inspiration.",
-  "version": "0.7.6",
+  "version": "0.7.7",
   "socket": true,
   "compatibility": {
     "minimum": "13.341",
@@ -56,6 +56,6 @@
     }
   ],
   "url": "https://github.com/Kaplar1208/really-inspired",
-  "manifest": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/dev/module.json",
-  "download": "https://github.com/Kaplar1208/really-inspired/archive/refs/heads/dev.zip"
+  "manifest": "https://raw.githubusercontent.com/Kaplar1208/really-inspired/main/module.json",
+  "download": "https://github.com/Kaplar1208/really-inspired/releases/latest/download/really-inspired.zip"
 }
