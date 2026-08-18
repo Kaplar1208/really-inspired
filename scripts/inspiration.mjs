@@ -11,10 +11,8 @@ const INTERNAL_UPDATE = { [MODULE_ID]: { internal: true } };
 
 export function registerInspirationHooks() {
   Hooks.on("updateActor", onUpdateActor);
+  Hooks.on("updateSetting", onPoolModeSettingChanged);
   registerSocketlibBridge(applySpendFromActorId);
-  Hooks.once("ready", () => {
-    if (getPoolMode() === POOL_MODES.SHARED) syncMyCharactersVanillaFlags();
-  });
 }
 
 export function getPoolMode() {
@@ -145,7 +143,10 @@ async function applyIndividualCount(actor, value) {
     console.error(`${MODULE_ID} | Failed to update inspiration flag for`, actor.name, err);
     return;
   }
-  await syncVanillaFlag(actor, getCount(actor) > 0);
+  // Siempre el propio: nunca el total del grupo. Así el flag de cada
+  // personaje es honesto por sí mismo (compatible con herramientas externas
+  // que lo leen por personaje, como Monk's TokenBar) sin importar el modo.
+  await syncVanillaFlag(actor, clamped > 0);
 }
 
 async function syncVanillaFlag(actor, hasInspiration) {
@@ -180,13 +181,14 @@ function onUpdateActor(actor, changes, options) {
   }
 
   // Cambió el número de ALGÚN personaje: en modo compartido eso mueve el
-  // total del grupo, así que cada cliente revisa si el checkbox vainilla de
-  // sus propios personajes sigue reflejando ese total, y refresca cualquier
-  // hoja que tenga abierta (el cambio pudo venir de un personaje distinto
-  // al que se está viendo, y esa hoja no se re-renderiza sola por eso).
+  // total del grupo, así que refrescamos cualquier hoja que tengamos
+  // abierta (el cambio pudo venir de un personaje distinto al que se está
+  // viendo, y esa hoja no se re-renderiza sola por eso). El flag vainilla
+  // de cada personaje ya se sincroniza solo con su propio número en
+  // applyIndividualCount, sin importar el modo — no hace falta tocar el de
+  // los demás aquí.
   const countChanged = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_COUNT}`) !== undefined;
   if (countChanged && getPoolMode() === POOL_MODES.SHARED) {
-    syncMyCharactersVanillaFlags();
     refreshOpenCharacterSheets();
   }
 
@@ -206,9 +208,10 @@ function onUpdateActor(actor, changes, options) {
   if (current > 0) {
     applyIndividualCount(actor, current - 1);
   } else if (getPoolMode() === POOL_MODES.SHARED) {
-    // El flag de este personaje mostraba "true" solo porque el grupo tenía
-    // inspiración (su propio número está en 0); el gasto externo se
-    // absorbe de quien realmente tenga con qué pagarlo.
+    // Este personaje no tenía nada propio, pero algo externo igual le apagó
+    // el flag (por ejemplo, ya lo había prendido algo externo antes sin que
+    // nosotros lo supiéramos); el gasto se absorbe de quien realmente tenga
+    // con qué pagarlo en el grupo.
     spendFromGroup(1, actor);
   }
 }
@@ -220,10 +223,19 @@ function refreshOpenCharacterSheets() {
   }
 }
 
-function syncMyCharactersVanillaFlags() {
-  const hasInspiration = getGroupTotal() > 0;
-  for (const actor of game.actors.filter(a => a.type === "character" && a.isOwner)) {
-    syncVanillaFlag(actor, hasInspiration);
+/**
+ * El flag vainilla de cada personaje solo se toca cuando SU PROPIO número
+ * cambia (ver applyIndividualCount), así que un personaje sin actividad
+ * reciente puede quedar con un flag desactualizado de una sesión anterior
+ * en otro modo. Al cambiar el modo (siempre lo hace el GM, así que tocar
+ * todos los personajes aquí nunca tiene problema de permisos), corregimos
+ * a todos de una vez para que ninguno quede "pegado".
+ */
+function onPoolModeSettingChanged(setting) {
+  if (setting.key !== `${MODULE_ID}.${SETTINGS.POOL_MODE}`) return;
+  if (!game.user.isGM) return;
+  for (const actor of game.actors.filter(a => a.type === "character" && a.hasPlayerOwner)) {
+    syncVanillaFlag(actor, getIndividualCount(actor) > 0);
   }
 }
 
