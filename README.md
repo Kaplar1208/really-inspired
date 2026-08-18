@@ -56,7 +56,7 @@ Pressing the **"I"** key opens a small dialog for the GM to pick which character
 
 ### Compatible with the system's regular Inspiration
 
-The module keeps the regular dnd5e Inspiration indicator in sync, in case another module or rules automation relies on it: if a character's counter is 1 or higher, that indicator shows as active; once it reaches 0, it shows as inactive.
+The module keeps the regular dnd5e Inspiration indicator in sync, in case another module or rules automation relies on it: if a character's counter is 1 or higher, that indicator shows as active; once it reaches 0, it shows as inactive. This also means tools like [Monk's TokenBar](https://foundryvtt.com/packages/monks-tokenbar) that grant Inspiration by toggling that same indicator (e.g. its "Add Inspiration" context menu option) work automatically, no setup needed. One limitation worth knowing: since that indicator is a plain on/off switch, using it again on a character that already shows as inspired has nothing new to detect and won't add another point — for more than the first point, use this module's own +/- buttons or the GM's "I" keybind instead.
 
 ## Language
 
