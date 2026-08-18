@@ -13,6 +13,13 @@ export function registerInspirationHooks() {
   Hooks.on("updateActor", onUpdateActor);
   Hooks.on("updateSetting", onPoolModeSettingChanged);
   registerSocketlibBridge(applySpendFromActorId);
+  // No solo al cambiar el ajuste: también al cargar el mundo, por si el
+  // flag de algún personaje ya venía desactualizado de antes (de una
+  // versión anterior del módulo, o de una sesión pasada) y el GM no llega
+  // a tocar el ajuste de modo en esta sesión.
+  Hooks.once("ready", () => {
+    if (game.user.isGM) resyncAllVanillaFlags();
+  });
 }
 
 export function getPoolMode() {
@@ -223,17 +230,21 @@ function refreshOpenCharacterSheets() {
   }
 }
 
-/**
- * El flag vainilla de cada personaje solo se toca cuando SU PROPIO número
- * cambia (ver applyIndividualCount), así que un personaje sin actividad
- * reciente puede quedar con un flag desactualizado de una sesión anterior
- * en otro modo. Al cambiar el modo (siempre lo hace el GM, así que tocar
- * todos los personajes aquí nunca tiene problema de permisos), corregimos
- * a todos de una vez para que ninguno quede "pegado".
- */
 function onPoolModeSettingChanged(setting) {
   if (setting.key !== `${MODULE_ID}.${SETTINGS.POOL_MODE}`) return;
   if (!game.user.isGM) return;
+  resyncAllVanillaFlags();
+}
+
+/**
+ * El flag vainilla de cada personaje solo se toca cuando SU PROPIO número
+ * cambia (ver applyIndividualCount), así que un personaje sin actividad
+ * reciente puede quedar con un flag desactualizado (de una sesión anterior,
+ * de otro modo, o de una versión previa del módulo). Solo el GM la corre
+ * (al cargar el mundo, y cada vez que cambia el ajuste de modo), ya que
+ * tocar los personajes de todos los demás requiere sus permisos.
+ */
+function resyncAllVanillaFlags() {
   for (const actor of game.actors.filter(a => a.type === "character" && a.hasPlayerOwner)) {
     syncVanillaFlag(actor, getIndividualCount(actor) > 0);
   }
