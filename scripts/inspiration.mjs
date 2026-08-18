@@ -181,9 +181,14 @@ function onUpdateActor(actor, changes, options) {
 
   // Cambió el número de ALGÚN personaje: en modo compartido eso mueve el
   // total del grupo, así que cada cliente revisa si el checkbox vainilla de
-  // sus propios personajes sigue reflejando ese total.
+  // sus propios personajes sigue reflejando ese total, y refresca cualquier
+  // hoja que tenga abierta (el cambio pudo venir de un personaje distinto
+  // al que se está viendo, y esa hoja no se re-renderiza sola por eso).
   const countChanged = foundry.utils.getProperty(changes, `flags.${MODULE_ID}.${FLAG_COUNT}`) !== undefined;
-  if (countChanged && getPoolMode() === POOL_MODES.SHARED) syncMyCharactersVanillaFlags();
+  if (countChanged && getPoolMode() === POOL_MODES.SHARED) {
+    syncMyCharactersVanillaFlags();
+    refreshOpenCharacterSheets();
+  }
 
   // Otro módulo (automatización de reglas, macros) pudo togglear el flag
   // vainilla por su cuenta. Si es así, ajustamos nuestro contador para no
@@ -205,6 +210,13 @@ function onUpdateActor(actor, changes, options) {
     // inspiración (su propio número está en 0); el gasto externo se
     // absorbe de quien realmente tenga con qué pagarlo.
     spendFromGroup(1, actor);
+  }
+}
+
+/** Re-renderiza cualquier hoja de personaje ya abierta, sin importar de quién. */
+function refreshOpenCharacterSheets() {
+  for (const actor of game.actors.filter(a => a.type === "character")) {
+    if (actor.sheet?.rendered) actor.sheet.render();
   }
 }
 
